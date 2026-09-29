@@ -3,116 +3,520 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HCM Team - Outline to V2Ray VPN Service</title>
+    <title>HCM VPN Service - High-Speed & Secure Outline, V2Ray / VLESS VPN in Myanmar</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #090d16 50%, #1e1b4b 100%);
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --accent-green: #10b981;
+            --bg-main: #0b0f17;
+            --panel-bg: #131a26;
+            --card-bg: #1a2332;
+            --border-color: rgba(255, 255, 255, 0.08);
             --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-gold: #fbbf24;
+            --accent-red: #ef4444;
             --text-main: #f9fafb;
             --text-sub: #9ca3af;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background: var(--bg-gradient); background-attachment: fixed; color: var(--text-main); padding: 20px 16px 40px 16px; display: flex; justify-content: center; min-height: 100vh; }
-        .container { max-width: 480px; width: 100%; }
-        .header { text-align: center; margin-bottom: 24px; }
-        .header h1 { font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .header p { color: var(--text-sub); font-size: 13px; margin-top: 4px; }
-        .contact-box { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px; margin-bottom: 20px; display: flex; justify-content: space-around; }
-        .contact-btn { color: #60a5fa; text-decoration: none; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .nav-btn { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-main); font-weight: bold; cursor: pointer; text-align: center; }
-        .nav-btn.active { background: #2563eb; border-color: #3b82f6; }
-        .category-title { font-size: 14px; font-weight: 700; color: #93c5fd; margin: 16px 0 10px 4px; }
-        .package-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px; cursor: pointer; position: relative; }
-        .card-title { font-size: 15px; font-weight: 700; color: #fff; }
-        .card-price { font-size: 18px; font-weight: 800; color: #10b981; margin-top: 4px; }
-        .card-price span { font-size: 11px; color: var(--text-sub); }
-        .btn-action { width: 100%; background: #10b981; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ---------------- NAVBAR & LOGO ---------------- */
+        .navbar {
+            background: rgba(19, 26, 38, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 1000;
+            padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .nav-logo {
+            font-size: 18px; font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+        }
+
+        .nav-logo img { width: 24px; height: 24px; border-radius: 6px; object-fit: cover; }
+
+        .nav-links { display: flex; gap: 12px; list-style: none; }
+        .nav-links button {
+            background: transparent; border: none; color: var(--text-sub);
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: color 0.2s;
+            display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px;
+        }
+        .nav-links button:hover, .nav-links button.active { color: #fff; background: rgba(255,255,255,0.05); }
+
+        /* ---------------- TOP CONTACT BAR ---------------- */
+        .top-contact-bar {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            max-width: 800px; margin: 0 auto;
+        }
+
+        .contact-bar-item {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 8px 12px; text-decoration: none; color: var(--text-main);
+            display: flex; align-items: center; gap: 10px; transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .contact-bar-item:hover { border-color: var(--accent-blue); transform: translateY(-2px); }
+        .contact-icon { font-size: 18px; color: var(--accent-blue); }
+        .contact-text { display: flex; flex-direction: column; }
+        .contact-label { font-size: 9px; color: var(--text-sub); text-transform: uppercase; font-weight: bold; }
+        .contact-val { font-size: 12px; font-weight: bold; color: #fff; }
+
+        .hero-section { padding: 30px 20px 15px 20px; text-align: center; max-width: 800px; margin: 0 auto; }
+        .hero-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3; }
+        .hero-subtitle { font-size: 13px; color: var(--text-sub); }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 0 16px 60px 16px; }
+
+        .page-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0 24px 0; }
+
+        .page-nav-card {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 20px 16px; text-align: center; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+
+        .page-nav-card:hover, .page-nav-card.active { border-color: var(--accent-blue); transform: translateY(-3px); }
+
+        .page-nav-icon {
+            width: 45px; height: 45px; border-radius: 12px; background: rgba(255,255,255,0.05);
+            display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--accent-blue);
+        }
+
+        .page-nav-title { font-size: 15px; font-weight: bold; color: #fff; }
+        .page-nav-sub { font-size: 11px; color: var(--text-sub); }
+
+        .page-view { display: none; }
+        .page-view.active { display: block; }
+
+        .card-box {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 20px; margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .section-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+        .btn-back-home {
+            background: var(--card-bg); color: var(--text-sub); border: 1px solid var(--border-color);
+            padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold;
+            cursor: pointer; margin-bottom: 16px; display: inline-flex; align-items: center; gap: 6px;
+        }
+
+        /* ---------------- OS APPS ---------------- */
+        .os-tabs { display: flex; gap: 8px; background: var(--card-bg); padding: 5px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 16px; }
+        .os-tab-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; background: transparent; color: var(--text-sub); font-weight: bold; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .os-tab-btn.active { background: var(--accent-blue); color: #fff; }
+
+        .app-list { display: flex; flex-direction: column; gap: 10px; }
+        .app-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; }
+        .app-info { display: flex; align-items: center; gap: 12px; }
+        .app-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--accent-blue); }
+        .app-name { font-size: 14px; font-weight: bold; color: #fff; }
+        .btn-add { background: var(--accent-purple); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; }
+
+        /* ---------------- PRICING & SERVER FILTER ---------------- */
+        .server-filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .server-btn { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; text-align: center; color: var(--text-sub); font-size: 12px; font-weight: bold; cursor: pointer; }
+        .server-btn.active { border-color: var(--accent-blue); color: #fff; background: rgba(59, 130, 246, 0.15); }
+
+        .package-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+        .pkg-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; position: relative; cursor: pointer; }
+        .pkg-badge { position: absolute; top: 12px; right: 12px; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 8px; }
+        .pkg-title { font-size: 15px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+        .pkg-price { font-size: 18px; font-weight: 800; color: var(--accent-green); }
+
+        .free-key-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+        .free-key-title { font-size: 15px; font-weight: bold; color: var(--accent-gold); margin-bottom: 8px; }
+        .key-val-box { background: rgba(0, 0, 0, 0.3); border: 1px dashed var(--border-color); border-radius: 8px; padding: 8px 10px; font-family: monospace; font-size: 11px; color: #d1d5db; word-break: break-all; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .btn-copy { background: var(--accent-green); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+
+        /* ---------------- CHECKOUT MODALS ---------------- */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+        .modal-box { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 20px; width: 100%; max-width: 400px; padding: 24px; text-align: center; }
+        .modal-title { font-size: 18px; font-weight: bold; color: #fff; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .modal-details-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; text-align: left; margin-bottom: 18px; }
+        .detail-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: var(--text-sub); }
+        .detail-row.total { border-top: 1px solid var(--border-color); padding-top: 10px; font-weight: bold; color: var(--accent-green); font-size: 15px; margin-bottom: 0; }
+        .modal-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-modal-green { background: var(--accent-green); color: #fff; }
+        .btn-modal-blue { background: var(--accent-blue); color: #fff; }
+        .btn-modal-cancel { background: transparent; color: var(--text-sub); border: 1px solid var(--border-color); }
+
+        .payment-card-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-bottom: 10px; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+
+        footer { background: var(--panel-bg); border-top: 1px solid var(--border-color); padding: 24px 20px; text-align: center; font-size: 12px; color: var(--text-sub); }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <h1>HCM Team</h1>
-        <p>Outline to V2Ray Premium VPN Service</p>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-logo" id="brand-logo-container" onclick="switchPage('home')">
+            <i class="fas fa-shield-alt" id="brand-default-icon"></i>
+            <span id="brand-text">HCM VPN Service</span>
+        </div>
+        <ul class="nav-links">
+            <li><button id="nav-btn-home" class="active" onclick="switchPage('home')"><i class="fas fa-home"></i> Home</button></li>
+            <li><button id="nav-btn-free" onclick="switchPage('free')"><i class="fas fa-gift"></i> Free Keys</button></li>
+            <li><button id="nav-btn-pricing" onclick="switchPage('pricing')"><i class="fas fa-gem"></i> Pricing</button></li>
+        </ul>
+    </nav>
+
+    <!-- TOP CONTACT BAR -->
+    <div class="top-contact-bar">
+        <a href="tel:09767661201" class="contact-bar-item"><i class="fas fa-phone-alt contact-icon" style="color: #34d399;"></i><div class="contact-text"><span class="contact-label">Direct Call</span><span class="contact-val">09767661201</span></div></a>
+        <a href="tel:09792274488" class="contact-bar-item"><i class="fas fa-phone-alt contact-icon" style="color: #34d399;"></i><div class="contact-text"><span class="contact-label">Direct Call</span><span class="contact-val">09792274488</span></div></a>
+        <a href="https://t.me/hcmchannel" target="_blank" class="contact-bar-item"><i class="fab fa-telegram-plane contact-icon" style="color: #60a5fa;"></i><div class="contact-text"><span class="contact-label">Telegram Channel</span><span class="contact-val">HCM Channel</span></div></a>
+        <a href="https://t.me/akuma_edu" target="_blank" class="contact-bar-item"><i class="fas fa-headset contact-icon" style="color: #a78bfa;"></i><div class="contact-text"><span class="contact-label">24/7 Admin Support</span><span class="contact-val">@akuma_edu</span></div></a>
     </div>
 
-    <div class="contact-box">
-        <a href="https://t.me/akuma_edu" class="contact-btn"><i class="fab fa-telegram"></i> Telegram</a>
-        <a href="viber://chat?number=%2B959123456789" class="contact-btn"><i class="fab fa-viber"></i> Viber</a>
-        <a href="tel:09767661201" class="contact-btn"><i class="fas fa-phone"></i> Call Direct</a>
-    </div>
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+        <h1 class="hero-title">High-Speed & Secure Outline, V2Ray / VLESS VPN in Myanmar</h1>
+        <p class="hero-subtitle">မြန်ဆန်ပြီး လုံခြုံစိတ်ချရသော VPN ဝန်ဆောင်မှုများကို သက်သာသော ဈေးနှုန်းများဖြင့် ရယူလိုက်ပါ။</p>
+    </section>
 
-    <div class="nav-tabs">
-        <div class="nav-btn active" onclick="showSection('pricing')">💎 VPN ဈေးနှုန်းများ</div>
-        <div class="nav-btn" onclick="showSection('free')">🎁 Free Key ရယူရန်</div>
-    </div>
-
-    <!-- Pricing Section -->
-    <div id="pricing-section">
-        <div class="category-title">📦 VIP Packages</div>
-        <div class="package-grid">
-            <div class="card">
-                <div class="card-title">100 GB (30 Days)</div>
-                <div class="card-price">3,000 <span>MMK</span></div>
-                <button class="btn-action" onclick="window.open('https://t.me/akuma_edu')">မှာယူမည်</button>
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+        <!-- 1. HOME SCREEN -->
+        <div id="page-home" class="page-view active">
+            <div class="page-nav-grid">
+                <div class="page-nav-card" onclick="switchPage('free')"><div class="page-nav-icon"><i class="fas fa-gift" style="color: #fbbf24;"></i></div><div class="page-nav-title">Free Server Keys</div><div class="page-nav-sub">အခမဲ့ ရယူသုံးစွဲရန် နှိပ်ပါ</div></div>
+                <div class="page-nav-card" onclick="switchPage('pricing')"><div class="page-nav-icon"><i class="fas fa-gem" style="color: #60a5fa;"></i></div><div class="page-nav-title">VPN Packages & ဈေးနှုန်း</div><div class="page-nav-sub">ဈေးနှုန်းများ ကြည့်ရန် နှိပ်ပါ</div></div>
             </div>
-            <div class="card">
-                <div class="card-title">300 GB (30 Days)</div>
-                <div class="card-price">7,000 <span>MMK</span></div>
-                <button class="btn-action" onclick="window.open('https://t.me/akuma_edu')">မှာယူမည်</button>
+
+            <div class="card-box">
+                <div class="section-title"><i class="fas fa-mobile-alt" style="color: #a78bfa;"></i> Supported VPN Apps & Direct Import</div>
+                <div class="os-tabs">
+                    <button class="os-tab-btn active" onclick="switchOs('android', this)"><i class="fab fa-android"></i> Android</button>
+                    <button class="os-tab-btn" onclick="switchOs('ios', this)"><i class="fab fa-apple"></i> iOS</button>
+                    <button class="os-tab-btn" onclick="switchOs('windows', this)"><i class="fab fa-windows"></i> Windows</button>
+                </div>
+
+                <div id="os-android" class="app-list">
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-rocket"></i></div><div class="app-name">V2Box</div></div><button class="btn-add" onclick="importApp('v2box', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-bolt"></i></div><div class="app-name">V2RayNG</div></div><button class="btn-add" onclick="importApp('v2rayng', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-cube"></i></div><div class="app-name">Sing-box</div></div><button class="btn-add" onclick="importApp('singbox', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-shield-alt"></i></div><div class="app-name">V2RayTun</div></div><button class="btn-add" onclick="importApp('v2raytun', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-paper-plane"></i></div><div class="app-name">Happ</div></div><button class="btn-add" onclick="importApp('happ', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-globe"></i></div><div class="app-name">Incy</div></div><button class="btn-add" onclick="importApp('incy', 'android')">Add</button></div>
+                </div>
+
+                <div id="os-ios" class="app-list" style="display: none;">
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-rocket"></i></div><div class="app-name">Shadowrocket</div></div><button class="btn-add" onclick="importApp('shadowrocket', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-cube"></i></div><div class="app-name">V2Box</div></div><button class="btn-add" onclick="importApp('v2box', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-paper-plane"></i></div><div class="app-name">Streisand</div></div><button class="btn-add" onclick="importApp('streisand', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-shield-alt"></i></div><div class="app-name">V2RayTun</div></div><button class="btn-add" onclick="importApp('v2raytun', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-bolt"></i></div><div class="app-name">Happ</div></div><button class="btn-add" onclick="importApp('happ', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-globe"></i></div><div class="app-name">Incy</div></div><button class="btn-add" onclick="importApp('incy', 'ios')">Add</button></div>
+                </div>
+
+                <div id="os-windows" class="app-list" style="display: none;">
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-desktop"></i></div><div class="app-name">v2rayN</div></div><button class="btn-add" onclick="importApp('v2rayn', 'windows')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-laptop"></i></div><div class="app-name">NekoBox / NekoRay</div></div><button class="btn-add" onclick="importApp('nekobox', 'windows')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-globe"></i></div><div class="app-name">Hiddify Next</div></div><button class="btn-add" onclick="importApp('hiddify', 'windows')">Add</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PRICING PAGE -->
+        <div id="page-pricing" class="page-view">
+            <button class="btn-back-home" onclick="switchPage('home')"><i class="fas fa-arrow-left"></i> Home သို့ပြန်သွားမည်</button>
+            <div class="card-box">
+                <div class="section-title"><i class="fas fa-server" style="color: #60a5fa;"></i> Select Available Server Nodes</div>
+                <div class="server-filter-grid">
+                    <div class="server-btn active" onclick="selectServer('Singapore', this)">🇸🇬 Singapore</div>
+                    <div class="server-btn" onclick="selectServer('Japan', this)">🇯🇵 Japan</div>
+                    <div class="server-btn" onclick="selectServer('United States', this)">🇺🇸 United States</div>
+                </div>
+
+                <div class="section-title"><i class="fas fa-gem" style="color: #60a5fa;"></i> Packages & Pricing</div>
+                <div id="pricing-container" class="package-grid"></div>
+            </div>
+        </div>
+
+        <!-- 3. FREE KEYS PAGE -->
+        <div id="page-free" class="page-view">
+            <button class="btn-back-home" onclick="switchPage('home')"><i class="fas fa-arrow-left"></i> Home သို့ပြန်သွားမည်</button>
+            <div class="card-box">
+                <div class="section-title"><i class="fas fa-gift" style="color: #fbbf24;"></i> Free Server Keys (3X-UI Sub Links)</div>
+                <div id="free-container"></div>
             </div>
         </div>
     </div>
 
-    <!-- Free Keys Section -->
-    <div id="free-section" style="display: none;">
-        <div class="category-title">⚡ Free Server Keys</div>
-        <div id="free-keys-list" class="package-grid" style="grid-template-columns: 1fr;"></div>
+    <!-- CHECKOUT MODALS -->
+    <div id="modal-step1" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title"><i class="fas fa-shopping-cart" style="color: var(--accent-blue);"></i> အော်ဒါ အတည်ပြုခြင်း</div>
+            <div class="modal-details-card">
+                <div class="detail-row"><span>Package:</span><b id="chk-pkg-title" style="color:#fff;">-</b></div>
+                <div class="detail-row"><span>Server Region:</span><b id="chk-pkg-server" style="color:#fff;">-</b></div>
+                <div class="detail-row"><span>Validity:</span><b id="chk-pkg-validity" style="color:#fff;">-</b></div>
+                <div class="detail-row total"><span>TOTAL:</span><span id="chk-pkg-price">-</span></div>
+            </div>
+            <button class="modal-btn btn-modal-green" onclick="goToStep(2)"><i class="fas fa-check"></i> ဝယ်ယူမည်</button>
+            <button class="modal-btn btn-modal-cancel" onclick="closeModals()"><i class="fas fa-times"></i> မဝယ်တော့ပါ</button>
+        </div>
     </div>
-</div>
+
+    <div id="modal-step2" class="modal-overlay">
+        <div class="modal-box" style="border-color: var(--accent-gold);">
+            <div class="modal-title" style="color: var(--accent-gold);"><i class="fas fa-exclamation-triangle"></i> အထူးသတိပေးချက်</div>
+            <p style="font-size: 13px; color: #d1d5db; margin-bottom: 20px;">
+                ငွေလွှဲသည့်အခါ <b>Note (သို့မဟုတ်) အကြောင်းအရာ</b> တွင် <b style="color: var(--accent-red);">"VPN"</b> ဟု လုံးဝ (လုံးဝ) မရေးပါနှင့်။
+            </p>
+            <button class="modal-btn btn-modal-blue" onclick="goToStep(3)"><i class="fas fa-check-circle"></i> နားလည်ပါပြီ (အတည်ပြု)</button>
+            <button class="modal-btn btn-modal-cancel" onclick="closeModals()">ပိတ်မည်</button>
+        </div>
+    </div>
+
+    <div id="modal-step3" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title"><i class="fas fa-wallet" style="color: var(--accent-green);"></i> ငွေပေးချေရန်</div>
+            
+            <div class="payment-card-item">
+                <div>
+                    <div style="font-size: 11px; color: var(--accent-blue); font-weight: bold;">KPay</div>
+                    <div id="disp-kpay-name" style="font-size: 13px; font-weight: bold; color: #fff;">Lin Htet Aung</div>
+                    <div id="disp-kpay-phone" style="font-size: 12px; color: var(--text-sub);">09690993417</div>
+                </div>
+                <button class="btn-copy" onclick="copyText(document.getElementById('disp-kpay-phone').innerText)">Copy</button>
+            </div>
+
+            <div class="payment-card-item">
+                <div>
+                    <div style="font-size: 11px; color: var(--accent-gold); font-weight: bold;">Wave Money</div>
+                    <div id="disp-wave-name" style="font-size: 13px; font-weight: bold; color: #fff;">Than Than Sint</div>
+                    <div id="disp-wave-phone" style="font-size: 12px; color: var(--text-sub);">09690993417</div>
+                </div>
+                <button class="btn-copy" onclick="copyText(document.getElementById('disp-wave-phone').innerText)">Copy</button>
+            </div>
+
+            <p style="font-size: 11px; color: var(--text-sub); margin: 12px 0;">ငွေလွှဲပြီးပါက အောက်ပါခလုတ်ကို နှိပ်ပါခင်ဗျာ။</p>
+
+            <button class="modal-btn btn-modal-green" onclick="handlePaymentDone()"><i class="fas fa-check-double"></i> ငွေလွှဲပြီးပါပြီ</button>
+            <button class="modal-btn btn-modal-blue" onclick="window.open('https://t.me/akuma_edu')"><i class="fab fa-telegram-plane"></i> 💬 Admin သို့ အရင်ပြောရန်</button>
+            <button class="modal-btn btn-modal-cancel" onclick="closeModals()">ပိတ်မည်</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 HCM VPN Service. All Rights Reserved.</p>
+        <p style="margin-top: 4px; font-size: 11px;">Powered by HCM Team</p>
+    </footer>
 
 <script>
-    function showSection(type) {
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        if (type === 'pricing') {
-            document.getElementById('pricing-section').style.display = 'block';
-            document.getElementById('free-section').style.display = 'none';
-            event.target.classList.add('active');
+    const firebaseConfig = {
+        apiKey: "AIzaSyDH2ylJwWUWprN6pKOEnn22rTcVC-_3JpY",
+        authDomain: "hcm-a0045.firebaseapp.com",
+        databaseURL: "https://hcm-a0045-default-rtdb.firebaseio.com",
+        projectId: "hcm-a0045",
+        storageBucket: "hcm-a0045.firebasestorage.app",
+        messagingSenderId: "859124742345",
+        appId: "1:859124742345:web:4472cce9b0e0e43cb17518",
+        measurementId: "G-EQJ3CHXQ4H"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let activeSubLink = "";
+    let selectedServerLocation = "Singapore";
+    let selectedPackage = null;
+
+    function switchPage(page) {
+        document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+
+        if (page === 'free') {
+            document.getElementById('page-free').classList.add('active');
+            document.getElementById('nav-btn-free').classList.add('active');
+        } else if (page === 'pricing') {
+            document.getElementById('page-pricing').classList.add('active');
+            document.getElementById('nav-btn-pricing').classList.add('active');
         } else {
-            document.getElementById('pricing-section').style.display = 'none';
-            document.getElementById('free-section').style.display = 'block';
-            event.target.classList.add('active');
-            loadFreeKeys();
+            document.getElementById('page-home').classList.add('active');
+            document.getElementById('nav-btn-home').classList.add('active');
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function selectServer(loc, el) {
+        document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        selectedServerLocation = loc;
+        renderPricing();
+    }
+
+    function switchOs(os, el) {
+        document.querySelectorAll('.os-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.app-list').forEach(l => l.style.display = 'none');
+        el.classList.add('active');
+        document.getElementById('os-' + os).style.display = 'flex';
+    }
+
+    function importApp(appName, os) {
+        if (!activeSubLink) return alert('လက်ရှိ Free Subscription Link မရှိသေးပါသဖြင့် Direct Add ပြုလုပ်၍ မရသေးပါခင်ဗျာ။');
+        const encodedUrl = encodeURIComponent(activeSubLink);
+
+        if (os === 'android') {
+            if (appName === 'v2rayng') window.location.href = `v2rayng://install-sub?url=${encodedUrl}`;
+            else if (appName === 'v2box') window.location.href = `v2box://install-sub?url=${encodedUrl}`;
+            else window.location.href = `https://play.google.com/store/search?q=${appName}&c=apps`;
+        } else if (os === 'ios') {
+            if (appName === 'shadowrocket') window.location.href = `sub://${btoa(activeSubLink)}`;
+            else if (appName === 'streisand') window.location.href = `streisand://import/${activeSubLink}`;
+            else window.location.href = `https://apps.apple.com/us/search?term=${appName}`;
+        } else {
+            navigator.clipboard.writeText(activeSubLink).then(() => alert('Windows App အတွက် Subscription Link ကို Copy ကူးလိုက်ပါပြီ!'));
         }
     }
 
-    function loadFreeKeys() {
-        const keys = JSON.parse(localStorage.getItem('hcm_free_keys') || '[]');
-        const list = document.getElementById('free-keys-list');
-        list.innerHTML = '';
-        if (keys.length === 0) {
-            list.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">လက်ရှိ Free Key များ မရှိသေးပါ။</div>';
-            return;
+    function copyText(text) { navigator.clipboard.writeText(text).then(() => alert('Copy ကူးပြီးပါပြီ!')); }
+
+    function openCheckoutModal(pkg) {
+        selectedPackage = pkg;
+        document.getElementById('chk-pkg-title').innerText = pkg.title;
+        document.getElementById('chk-pkg-server').innerText = selectedServerLocation;
+        document.getElementById('chk-pkg-validity').innerText = pkg.validity;
+        document.getElementById('chk-pkg-price').innerText = pkg.priceText;
+        goToStep(1);
+    }
+
+    function goToStep(step) {
+        closeModals();
+        document.getElementById('modal-step' + step).style.display = 'flex';
+    }
+
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+
+    function handlePaymentDone() {
+        alert('ငွေလွှဲပြေစာ (Screenshot) အား Admin သို့ ပို့ပေးပါရန်။');
+        const textMessage = `Hello Admin,
+ကျွန်တော် VPN Order ဝယ်ယူထားပါသည်။
+
+📦 Package: ${selectedPackage ? selectedPackage.title : '-'}
+🌐 Server: ${selectedServerLocation}
+⏳ Validity: ${selectedPackage ? selectedPackage.validity : '-'}
+💰 Total Price: ${selectedPackage ? selectedPackage.priceText : '-'}
+
+ငွေလွှဲပြေစာ Screenshot အား အောက်တွင် ပူးတွဲပေးပို့လိုက်ပါသည်။`;
+
+        window.open(`https://t.me/akuma_edu?text=${encodeURIComponent(textMessage)}`, '_blank');
+        closeModals();
+    }
+
+    let packagesCache = null;
+    function renderPricing() {
+        const container = document.getElementById('pricing-container');
+        container.innerHTML = '';
+        if (!packagesCache) return container.innerHTML = '<div style="color:#9ca3af; text-align:center;">Packages မရှိသေးပါ။</div>';
+
+        Object.keys(packagesCache).forEach(id => {
+            const p = packagesCache[id];
+            const div = document.createElement('div');
+            div.className = 'pkg-card';
+            div.onclick = () => openCheckoutModal(p);
+            div.innerHTML = `
+                ${p.badge ? `<span class="pkg-badge">${p.badge}</span>` : ''}
+                <div class="pkg-title">${p.title} (${p.validity})</div>
+                <div class="pkg-price">${p.priceText}</div>
+                <p style="font-size:11px; color:#9ca3af; margin-top:4px;">Server: <b>${selectedServerLocation}</b> | မှာယူရန် နှိပ်ပါ။</p>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    db.ref('packages').on('value', snapshot => {
+        packagesCache = snapshot.val();
+        renderPricing();
+    });
+
+    // REAL-TIME PAYMENTS & BRAND LOGO FETCH
+    db.ref('payments').on('value', snapshot => {
+        const p = snapshot.val();
+        if (p) {
+            if (p.kpayName) document.getElementById('disp-kpay-name').innerText = p.kpayName;
+            if (p.kpayPhone) document.getElementById('disp-kpay-phone').innerText = p.kpayPhone;
+            if (p.waveName) document.getElementById('disp-wave-name').innerText = p.waveName;
+            if (p.wavePhone) document.getElementById('disp-wave-phone').innerText = p.wavePhone;
+
+            // Brand Logo Auto Switch
+            const brandBox = document.getElementById('brand-logo-container');
+            const defIcon = document.getElementById('brand-default-icon');
+            if (p.brandLogo && p.brandLogo.trim() !== '') {
+                if (defIcon) defIcon.style.display = 'none';
+                let img = document.getElementById('brand-custom-img');
+                if (!img) {
+                    img = document.createElement('img');
+                    img.id = 'brand-custom-img';
+                    brandBox.insertBefore(img, document.getElementById('brand-text'));
+                }
+                img.src = p.brandLogo;
+                img.style.display = 'inline-block';
+            } else {
+                if (defIcon) defIcon.style.display = 'inline-block';
+                const img = document.getElementById('brand-custom-img');
+                if (img) img.style.display = 'none';
+            }
         }
-        keys.forEach(k => {
-            list.innerHTML += `
-                <div class="card">
-                    <div class="card-title">${k.name}</div>
-                    <div style="font-size:12px; color:#9ca3af; margin: 4px 0;">Data: ${k.gb} | Expiry: ${k.expiry}</div>
-                    <div style="display:flex; gap:8px; margin-top:10px;">
-                        <button class="btn-action" style="background:#3b82f6;" onclick="window.open('${k.link}')">3X-UI Sub Dashboard</button>
-                        <button class="btn-action" onclick="navigator.clipboard.writeText('${k.link}'); alert('Copy ကူးပြီးပါပြီ!');">Copy Link</button>
+    });
+
+    db.ref('free_keys').on('value', snapshot => {
+        const container = document.getElementById('free-container');
+        container.innerHTML = '';
+        const data = snapshot.val();
+        if (!data) return container.innerHTML = '<div style="color:#9ca3af; text-align:center;">Free Keys မရှိသေးပါ။</div>';
+
+        Object.keys(data).forEach(id => {
+            const f = data[id];
+            if (f.link) activeSubLink = f.link;
+
+            let keysHtml = '';
+            if (f.keys) {
+                f.keys.forEach(k => {
+                    keysHtml += `<div class="key-val-box"><span>🔑 <b>${k.name}:</b> ${k.value}</span><button class="btn-copy" onclick="copyText('${k.value}')">Copy</button></div>`;
+                });
+            }
+
+            container.innerHTML += `
+                <div class="free-key-card">
+                    <div class="free-key-title">🎁 ${f.name}</div>
+                    <p style="font-size:11px; color:#9ca3af;">Data Limit: ${f.gb} | Expiry: ${f.expiry}</p>
+                    <div class="key-val-box" style="border-color:#3b82f6; margin-top:8px;">
+                        <span>🔗 <b>Sub Link:</b> ${f.link}</span>
+                        <button class="btn-copy" style="background:#3b82f6;" onclick="copyText('${f.link}')">Copy Sub</button>
                     </div>
+                    ${keysHtml}
                 </div>
             `;
         });
-    }
+    });
 </script>
+
 </body>
 </html>
