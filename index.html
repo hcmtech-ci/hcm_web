@@ -3,26 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HCM Team - Admin Management Panel</title>
+    <title>HCM VPN Service - High-Speed & Secure Outline, V2Ray / VLESS VPN in Myanmar</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Firebase Compat SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         :root {
-            --bg-main: #0d131d;
-            --panel-bg: #151d2a;
-            --card-bg: #1c2638;
+            --bg-main: #0b0f17;
+            --panel-bg: #131a26;
+            --card-bg: #1a2332;
             --border-color: rgba(255, 255, 255, 0.08);
             --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
             --accent-green: #10b981;
-            --accent-red: #ef4444;
             --accent-gold: #fbbf24;
+            --accent-red: #ef4444;
             --text-main: #f9fafb;
             --text-sub: #9ca3af;
-            --sidebar-width: 220px;
-            --sidebar-collapsed-width: 65px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -30,483 +28,493 @@
         body {
             background-color: var(--bg-main);
             color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
+            line-height: 1.6;
+            overflow-x: hidden;
         }
 
-        /* FLOATING TOAST NOTIFICATION */
-        #toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        }
-
-        .toast-bubble {
-            background: rgba(21, 29, 42, 0.92);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 12px 18px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            pointer-events: auto;
-            max-width: 320px;
-        }
-
-        .toast-bubble.success { border-left: 4px solid var(--accent-green); }
-        .toast-bubble.danger { border-left: 4px solid var(--accent-red); }
-        .toast-bubble.loading { border-left: 4px solid var(--accent-blue); }
-
-        @keyframes toastIn {
-            0% { transform: translateY(-30px) scale(0.9); opacity: 0; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-
-        @keyframes toastOut {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-20px) scale(0.9); opacity: 0; }
-        }
-
-        /* CUSTOM CONFIRMATION MODAL */
-        #custom-confirm-modal {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 99999;
-        }
-        .confirm-dialog-box {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            width: 360px;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-            text-align: center;
-            animation: toastIn 0.25s ease;
-        }
-        .confirm-dialog-box h3 { font-size: 18px; color: #fff; margin-bottom: 10px; }
-        .confirm-dialog-box p { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; line-height: 1.5; }
-        .confirm-dialog-btns { display: flex; gap: 10px; }
-        .confirm-dialog-btns button { flex: 1; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; border: none; }
-
-        /* LOGIN UI */
-        #login-screen {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--bg-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        .login-card {
-            background: var(--panel-bg);
-            width: 360px;
-            padding: 40px 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255,255,255,0.1);
-            border: 1px solid var(--border-color);
-            text-align: center;
-        }
-
-        .login-card h1 { font-size: 26px; font-weight: 700; color: var(--accent-blue); letter-spacing: 1px; margin-bottom: 4px; }
-        .login-card .divider { width: 30px; height: 3px; background: var(--accent-blue); margin: 0 auto 20px auto; border-radius: 2px; }
-        .login-card h2 { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 24px; }
-
-        .input-group { text-align: left; margin-bottom: 16px; }
-        .input-group label { display: block; font-size: 13px; font-weight: 600; color: #ffffff; margin-bottom: 8px; }
-        .input-wrapper { position: relative; display: flex; align-items: center; }
-        .input-wrapper i.left-icon { position: absolute; left: 14px; color: var(--text-sub); font-size: 14px; }
-        .input-wrapper input, .input-wrapper select, .input-wrapper textarea {
-            width: 100%;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px 14px 12px 38px;
-            color: #fff;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .input-wrapper input:focus, .input-wrapper select:focus, .input-wrapper textarea:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-        }
-        .toggle-eye { position: absolute; right: 14px; color: var(--text-sub); cursor: pointer; font-size: 14px; }
-
-        .btn-login {
-            width: 100%;
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.2s, transform 0.1s;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-        }
-        .btn-login:hover { background: #2563eb; transform: translateY(-1px); }
-
-        /* DASHBOARD LAYOUT */
-        #dash-screen { display: flex; width: 100vw; min-height: 100vh; }
-
-        .sidebar {
-            width: var(--sidebar-width);
-            background: var(--panel-bg);
-            border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column;
-            transition: width 0.3s ease;
-            position: relative; z-index: 100;
-        }
-
-        .sidebar.collapsed { width: var(--sidebar-collapsed-width); }
-
-        .sidebar-header {
-            padding: 20px 16px;
-            display: flex; align-items: center; justify-content: space-between;
+        .navbar {
+            background: rgba(19, 26, 38, 0.95);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 1000;
+            padding: 12px 24px;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .sidebar-brand { font-size: 18px; font-weight: bold; color: var(--accent-blue); white-space: nowrap; overflow: hidden; display: flex; align-items: center; gap: 10px; }
-        .sidebar.collapsed .sidebar-brand span { display: none; }
-
-        .toggle-sidebar-btn { background: transparent; border: none; color: var(--text-sub); cursor: pointer; font-size: 16px; }
-
-        .sidebar-menu { list-style: none; padding: 15px 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-        .menu-item {
-            display: flex; align-items: center; gap: 14px; padding: 12px 14px;
-            border-radius: 10px; color: var(--text-sub); text-decoration: none;
-            font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        .nav-logo {
+            font-size: 18px; font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
         }
 
-        .menu-item:hover, .menu-item.active { background: var(--card-bg); color: #fff; border: 1px solid var(--border-color); }
-        .menu-item.active { border-left: 3px solid var(--accent-blue); color: var(--accent-blue); }
-        .sidebar.collapsed .menu-item span { display: none; }
+        .nav-links { display: flex; gap: 12px; list-style: none; }
+        .nav-links button {
+            background: transparent; border: none; color: var(--text-sub);
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: color 0.2s;
+            display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px;
+        }
+        .nav-links button:hover, .nav-links button.active { color: #fff; background: rgba(255,255,255,0.05); }
 
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; background: var(--bg-main); }
-        .header-title { font-size: 22px; font-weight: bold; margin-bottom: 24px; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .top-contact-bar {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            max-width: 1000px; margin: 0 auto;
+        }
+
+        .contact-bar-item {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 14px;
+            text-decoration: none;
+            color: var(--text-main);
+            display: flex; align-items: center; gap: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .contact-bar-item:hover { border-color: var(--accent-blue); transform: translateY(-2px); }
+        .contact-icon { font-size: 18px; color: var(--accent-blue); }
+        .contact-text { display: flex; flex-direction: column; }
+        .contact-label { font-size: 9px; color: var(--text-sub); text-transform: uppercase; font-weight: bold; }
+        .contact-val { font-size: 12px; font-weight: bold; color: #fff; }
+
+        .hero-section { padding: 40px 20px 20px 20px; text-align: center; max-width: 900px; margin: 0 auto; }
+        .hero-title { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.3; }
+        .hero-subtitle { font-size: 14px; color: var(--text-sub); }
+
+        /* RESPONSIVE CONTAINER */
+        .container { max-width: 900px; margin: 0 auto; padding: 0 20px 60px 20px; }
+
+        .page-nav-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;
+            margin: 20px 0 28px 0;
+        }
+
+        .page-nav-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 24px 20px; text-align: center;
+            cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+
+        .page-nav-card:hover, .page-nav-card.active {
+            border-color: var(--accent-blue);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);
+            transform: translateY(-3px);
+        }
+
+        .page-nav-icon {
+            width: 50px; height: 50px; border-radius: 12px;
+            background: rgba(255,255,255,0.05); display: flex;
+            align-items: center; justify-content: center; font-size: 22px; color: var(--accent-blue);
+        }
+
+        .page-nav-title { font-size: 16px; font-weight: bold; color: #fff; }
+        .page-nav-sub { font-size: 12px; color: var(--text-sub); }
+
+        .page-view { display: none; }
+        .page-view.active { display: block; }
 
         .card-box {
-            background: var(--panel-bg); border: 1px solid var(--border-color);
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 16px; padding: 24px; margin-bottom: 24px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
         }
 
-        .card-box-title { font-size: 16px; font-weight: bold; color: var(--accent-blue); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
+        .section-title { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
 
-        .btn-action {
-            padding: 10px 18px; border-radius: 10px; border: none; font-weight: bold; font-size: 13px;
-            cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .btn-green { background: var(--accent-green); color: #fff; }
-        .btn-green:hover { background: #059669; }
-        .btn-danger { background: var(--accent-red); color: #fff; }
-        .btn-secondary { background: var(--card-bg); color: #fff; border: 1px solid var(--border-color); }
-
-        .dynamic-key-row { background: var(--card-bg); border: 1px dashed var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 12px; position: relative; }
-
-        .item-list { display: flex; flex-direction: column; gap: 12px; }
-        .list-item { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
-        .item-info h4 { font-size: 15px; color: var(--accent-blue); }
-        .item-info p { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
-        .item-btns { display: flex; gap: 8px; }
-
-        .tab-section { display: none; }
-        .tab-section.active { display: block; }
-
-        /* PAYMENT CARDS UI STYLES */
-        .payment-methods-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .payment-method-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .btn-back-home {
+            background: var(--card-bg); color: var(--text-sub); border: 1px solid var(--border-color);
+            padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: bold;
+            cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 6px;
             transition: all 0.2s;
         }
-        .payment-method-card:hover { border-color: var(--accent-blue); }
-        .payment-method-info span { font-size: 11px; color: var(--text-sub); display: block; }
-        .payment-method-info h4 { font-size: 14px; color: #fff; font-weight: 600; margin-top: 2px; }
-        .btn-add-payment {
-            width: 32px; height: 32px; border-radius: 8px; background: rgba(59, 130, 246, 0.15);
-            border: 1px solid rgba(59, 130, 246, 0.3); color: var(--accent-blue); display: flex;
-            align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;
-        }
-        .btn-add-payment:hover { background: var(--accent-blue); color: #fff; }
+        .btn-back-home:hover { color: #fff; border-color: var(--accent-blue); }
 
-        /* PAYMENT MODAL */
-        #payment-modal {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center; z-index: 9999;
+        .os-tabs {
+            display: flex; gap: 8px; background: var(--card-bg);
+            padding: 6px; border-radius: 12px; border: 1px solid var(--border-color);
+            margin-bottom: 18px;
         }
-        .payment-modal-box {
+
+        .os-tab-btn {
+            flex: 1; padding: 10px; border: none; border-radius: 8px;
+            background: transparent; color: var(--text-sub);
+            font-weight: bold; font-size: 13px; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .os-tab-btn.active { background: var(--accent-blue); color: #fff; }
+
+        .app-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+        .app-item {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .app-info { display: flex; align-items: center; gap: 12px; }
+        .app-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: rgba(255,255,255,0.05); display: flex;
+            align-items: center; justify-content: center; font-size: 16px; color: var(--accent-blue);
+        }
+        .app-name { font-size: 14px; font-weight: bold; color: #fff; }
+
+        .btn-add {
+            background: var(--accent-purple); color: white; border: none;
+            padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 12px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-add:hover { opacity: 0.9; }
+
+        .server-filter-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;
+        }
+
+        .server-btn {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 12px; text-align: center;
+            color: var(--text-sub); font-size: 13px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .server-btn:hover, .server-btn.active {
+            border-color: var(--accent-blue); color: #fff; background: rgba(59, 130, 246, 0.15);
+        }
+
+        .package-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+        .pkg-card {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 20px; position: relative; cursor: pointer; transition: all 0.2s;
+        }
+        .pkg-card:hover { border-color: var(--accent-blue); transform: translateY(-3px); }
+
+        .pkg-badge {
+            position: absolute; top: 14px; right: 14px;
+            background: rgba(16, 185, 129, 0.2); color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 8px;
+        }
+
+        .pkg-title { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 6px; }
+        .pkg-price { font-size: 20px; font-weight: 800; color: var(--accent-green); }
+        .pkg-price-old { font-size: 13px; color: var(--text-sub); text-decoration: line-through; margin-right: 6px; }
+
+        /* FREE KEY UI STYLES */
+        .free-key-panel {
+            background: #111827; border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px; padding: 24px; margin-bottom: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+        .free-key-header { font-size: 17px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+        
+        .usage-overview-box {
+            background: #1a2332; border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px; padding: 16px; margin-bottom: 18px;
+        }
+
+        .metrics-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 0;
+        }
+        .metric-card {
+            background: #111827; border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px; padding: 12px; text-align: center;
+        }
+        .metric-label { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
+        .metric-val { font-size: 14px; font-weight: bold; color: #fff; }
+        
+        .status-badge-active {
+            background: rgba(16, 185, 129, 0.2); color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4); padding: 3px 10px; border-radius: 6px; font-size: 12px; display: inline-block;
+        }
+        .status-badge-inactive {
+            background: rgba(239, 68, 68, 0.2); color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4); padding: 3px 10px; border-radius: 6px; font-size: 12px; display: inline-block;
+        }
+
+        .dashboard-actions-grid {
+            display: flex; margin-bottom: 20px;
+        }
+        .btn-sub-dash {
+            width: 100%;
+            background: #0284c7; color: white; border: none; border-radius: 12px;
+            padding: 14px; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; transition: opacity 0.2s;
+        }
+        .btn-sub-dash:hover { opacity: 0.9; }
+
+        .server-key-box-item {
+            background: #1a2332; border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px; padding: 16px; margin-bottom: 14px;
+        }
+        .server-key-title { font-size: 14px; font-weight: bold; color: #fbbf24; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        
+        .key-copy-row {
+            background: rgba(0, 0, 0, 0.3); border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 8px; padding: 10px 12px; font-family: monospace; font-size: 12px;
+            color: #d1d5db; word-break: break-all;
+            display: flex; justify-content: space-between; align-items: center; gap: 12px;
+        }
+        .btn-copy-key {
+            background: #10b981; color: white; border: none;
+            padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; flex-shrink: 0;
+        }
+
+        /* CUSTOM MODAL / DYNAMIC CARD STYLES */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px);
+            display: flex; justify-content: center; align-items: center; z-index: 2000;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            padding: 16px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-box {
             background: var(--panel-bg); border: 1px solid var(--border-color);
-            width: 380px; padding: 24px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-            animation: toastIn 0.25s ease;
+            border-radius: 18px; width: 100%; max-width: 440px; padding: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); transform: translateY(20px);
+            transition: transform 0.3s ease; max-height: 90vh; overflow-y: auto;
         }
-        .payment-modal-header { font-size: 16px; font-weight: bold; color: var(--accent-blue); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+        .modal-title { font-size: 17px; font-weight: bold; color: #fff; }
+        .modal-close { background: transparent; border: none; color: var(--text-sub); font-size: 20px; cursor: pointer; }
+        .modal-close:hover { color: #fff; }
+
+        .qty-btns { display: flex; gap: 8px; margin: 10px 0 18px 0; }
+        .qty-btn {
+            flex: 1; padding: 10px 0; border: 1px solid var(--border-color); background: var(--card-bg);
+            color: var(--text-sub); font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+        }
+        .qty-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+
+        .payment-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
+        .pay-btn {
+            background: var(--card-bg); border: 1px solid var(--border-color); color: #fff;
+            padding: 12px 8px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; text-align: center; transition: all 0.2s;
+        }
+        .pay-btn:hover, .pay-btn.active { border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.2); }
+
+        .action-btn {
+            width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; margin-top: 12px; transition: opacity 0.2s;
+        }
+        .action-btn:hover { opacity: 0.9; }
+
+        .warranty-box {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 14px; margin-top: 16px; font-size: 11px; color: var(--text-sub);
+        }
+
+        footer {
+            background: var(--panel-bg); border-top: 1px solid var(--border-color);
+            padding: 24px 20px; text-align: center; font-size: 12px; color: var(--text-sub);
+        }
+
+        /* MOBILE OPTIMIZATION MEDIA QUERY */
+        @media (max-width: 600px) {
+            .navbar { padding: 10px 16px; }
+            .hero-title { font-size: 20px; }
+            .container { padding: 0 12px 40px 12px; }
+            .server-filter-grid { grid-template-columns: 1fr; }
+            .app-list { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-<!-- FLOATING TOAST NOTIFICATION CONTAINER -->
-<div id="toast-container"></div>
-
-<!-- CUSTOM CONFIRMATION MODAL -->
-<div id="custom-confirm-modal">
-    <div class="confirm-dialog-box">
-        <h3 id="confirm-title">အတည်ပြုရန်</h3>
-        <p id="confirm-desc">ဤလုပ်ဆောင်ချက်ကို ဆောင်ရွက်ရန် သေချာပါသလား?</p>
-        <div class="confirm-dialog-btns">
-            <button class="btn-action btn-secondary" onclick="closeConfirmModal(false)">Cancel</button>
-            <button class="btn-action btn-green" id="confirm-btn-yes" onclick="closeConfirmModal(true)">Confirm</button>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-logo" onclick="switchPage('home')">
+            <i class="fas fa-shield-alt"></i> HCM VPN Service
         </div>
-    </div>
-</div>
-
-<!-- PAYMENT CONFIG MODAL -->
-<div id="payment-modal">
-    <div class="payment-modal-box">
-        <div class="payment-modal-header"><i class="fas fa-wallet"></i> <span id="payment-modal-title">KBZ Mobile Payment</span></div>
-        <input type="hidden" id="modal-payment-type">
-        <div class="input-group">
-            <label>Account Name</label>
-            <div class="input-wrapper"><i class="fas fa-user left-icon"></i><input type="text" id="pay-acc-name" placeholder="အကောင့်အမည်ထည့်ပါ"></div>
-        </div>
-        <div class="input-group">
-            <label>Phone Number / Account No</label>
-            <div class="input-wrapper"><i class="fas fa-phone left-icon"></i><input type="text" id="pay-acc-num" placeholder="ဖုန်းနံပါတ် သို့မဟုတ် အကောင့်နံပါတ်"></div>
-        </div>
-        <div class="confirm-dialog-btns" style="margin-top: 20px;">
-            <button class="btn-action btn-secondary" onclick="closePaymentModal()">ပိတ်မည်</button>
-            <button class="btn-action btn-green" onclick="submitPaymentData()">သိမ်းဆည်းမည်</button>
-        </div>
-    </div>
-</div>
-
-<!-- LOGIN SCREEN -->
-<div id="login-screen">
-    <div class="login-card">
-        <h1>Admin Panel</h1>
-        <div class="divider"></div>
-        <h2>Hello</h2>
-
-        <form onsubmit="handleLogin(event)">
-            <div class="input-group">
-                <label>Email Address</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-envelope left-icon"></i>
-                    <input type="email" id="login-email" placeholder="Email ရိုက်ထည့်ပါ" required>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label>Password</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-lock left-icon"></i>
-                    <input type="password" id="login-pass" placeholder="Password ရိုက်ထည့်ပါ" required>
-                    <i class="fas fa-eye-slash toggle-eye" onclick="togglePass()"></i>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-login">Log In</button>
-        </form>
-    </div>
-</div>
-
-<!-- DASHBOARD MAIN LAYOUT -->
-<div id="dash-screen" style="display: none;">
-    <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-brand">
-                <i class="fas fa-shield-alt"></i> <span>Admin Panel</span>
-            </div>
-            <button class="toggle-sidebar-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-        </div>
-
-        <ul class="sidebar-menu">
-            <li class="menu-item active" onclick="switchTab('free', this)"><i class="fas fa-gift"></i> <span>Free Keys</span></li>
-            <li class="menu-item" onclick="switchTab('pricing', this)"><i class="fas fa-gem"></i> <span>VPN Plan</span></li>
-            <li class="menu-item" onclick="switchTab('payments', this)"><i class="fas fa-wallet"></i> <span>Payments & Branding</span></li>
-            <li class="menu-item" onclick="switchTab('nodes', this)"><i class="fas fa-server"></i> <span>Nodes Config</span></li>
-            <li class="menu-item" style="margin-top: auto; color: var(--accent-red);" onclick="handleLogout()"><i class="fas fa-power-off"></i> <span>Log Out</span></li>
+        <ul class="nav-links">
+            <li><button id="nav-btn-home" class="active" onclick="switchPage('home')"><i class="fas fa-home"></i> Home</button></li>
+            <li><button id="nav-btn-free" onclick="switchPage('free')"><i class="fas fa-gift"></i> Free Keys</button></li>
+            <li><button id="nav-btn-pricing" onclick="switchPage('pricing')"><i class="fas fa-gem"></i> Plan</button></li>
         </ul>
+    </nav>
+
+    <!-- TOP CONTACT BAR -->
+    <div class="top-contact-bar">
+        <a href="tel:09767661201" class="contact-bar-item">
+            <i class="fas fa-phone-alt contact-icon" style="color: #34d399;"></i>
+            <div class="contact-text">
+                <span class="contact-label">Direct Call</span>
+                <span class="contact-val">09767661201</span>
+            </div>
+        </a>
+        <a href="tel:09792274488" class="contact-bar-item">
+            <i class="fas fa-phone-alt contact-icon" style="color: #34d399;"></i>
+            <div class="contact-text">
+                <span class="contact-label">Direct Call</span>
+                <span class="contact-val">09792274488</span>
+            </div>
+        </a>
+        <a href="https://t.me/hcmchannel" target="_blank" class="contact-bar-item">
+            <i class="fab fa-telegram-plane contact-icon" style="color: #60a5fa;"></i>
+            <div class="contact-text">
+                <span class="contact-label">Telegram Channel</span>
+                <span class="contact-val">HCM Channel</span>
+            </div>
+        </a>
+        <a href="https://t.me/akuma_edu" target="_blank" class="contact-bar-item">
+            <i class="fas fa-headset contact-icon" style="color: #a78bfa;"></i>
+            <div class="contact-text">
+                <span class="contact-label">24/7 Admin Support</span>
+                <span class="contact-val">@akuma_edu</span>
+            </div>
+        </a>
     </div>
 
-    <!-- MAIN CONTENT AREA -->
-    <div class="main-content">
-        <!-- 1. FREE KEYS TAB -->
-        <div id="tab-free" class="tab-section active">
-            <div class="header-title"><i class="fas fa-gift" style="color: #fbbf24;"></i> Free Key / Sub Link စီမံခန့်ခွဲရန်</div>
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+        <h1 class="hero-title">High-Speed & Secure Outline, V2Ray / VLESS VPN in Myanmar</h1>
+        <p class="hero-subtitle">မြန်ဆန်ပြီး လုံခြုံစိတ်ချရသော VPN ဝန်ဆောင်မှုများကို သက်သာသော ဈေးနှုန်းများဖြင့် ရယူလိုက်ပါ။</p>
+    </section>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+
+        <!-- 1. HOME SCREEN (MAIN PANEL) -->
+        <div id="page-home" class="page-view active">
+            <div class="page-nav-grid">
+                <div class="page-nav-card" onclick="switchPage('free')">
+                    <div class="page-nav-icon"><i class="fas fa-gift" style="color: #fbbf24;"></i></div>
+                    <div class="page-nav-title">Free Server Keys</div>
+                    <div class="page-nav-sub">အခမဲ့ ရယူသုံးစွဲရန် နှိပ်ပါ</div>
+                </div>
+                <div class="page-nav-card" onclick="switchPage('pricing')">
+                    <div class="page-nav-icon"><i class="fas fa-gem" style="color: #60a5fa;"></i></div>
+                    <div class="page-nav-title">VPN Plan & ဈေးနှုန်း</div>
+                    <div class="page-nav-sub">ဈေးနှုန်းများ ကြည့်ရန် နှိပ်ပါ</div>
+                </div>
+            </div>
+
+            <div class="card-box">
+                <div class="section-title"><i class="fas fa-mobile-alt" style="color: #a78bfa;"></i> Supported VPN Apps & Direct Import</div>
+                
+                <div class="os-tabs">
+                    <button class="os-tab-btn active" onclick="switchOs('android', this)"><i class="fab fa-android"></i> Android</button>
+                    <button class="os-tab-btn" onclick="switchOs('ios', this)"><i class="fab fa-apple"></i> iOS</button>
+                    <button class="os-tab-btn" onclick="switchOs('windows', this)"><i class="fab fa-windows"></i> Windows</button>
+                </div>
+
+                <div id="os-android" class="app-list">
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-rocket"></i></div><div class="app-name">V2Box</div></div><button class="btn-add" onclick="importApp('v2box', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-bolt"></i></div><div class="app-name">V2RayNG</div></div><button class="btn-add" onclick="importApp('v2rayng', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-cube"></i></div><div class="app-name">Sing-box</div></div><button class="btn-add" onclick="importApp('singbox', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-shield-alt"></i></div><div class="app-name">V2RayTun</div></div><button class="btn-add" onclick="importApp('v2raytun', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-paper-plane"></i></div><div class="app-name">Happ</div></div><button class="btn-add" onclick="importApp('happ', 'android')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-globe"></i></div><div class="app-name">Incy</div></div><button class="btn-add" onclick="importApp('incy', 'android')">Add</button></div>
+                </div>
+
+                <div id="os-ios" class="app-list" style="display: none;">
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-rocket"></i></div><div class="app-name">Shadowrocket</div></div><button class="btn-add" onclick="importApp('shadowrocket', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-cube"></i></div><div class="app-name">V2Box</div></div><button class="btn-add" onclick="importApp('v2box', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-paper-plane"></i></div><div class="app-name">Streisand</div></div><button class="btn-add" onclick="importApp('streisand', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-shield-alt"></i></div><div class="app-name">V2RayTun</div></div><button class="btn-add" onclick="importApp('v2raytun', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-bolt"></i></div><div class="app-name">Happ</div></div><button class="btn-add" onclick="importApp('happ', 'ios')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-globe"></i></div><div class="app-name">Incy</div></div><button class="btn-add" onclick="importApp('incy', 'ios')">Add</button></div>
+                </div>
+
+                <div id="os-windows" class="app-list" style="display: none;">
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-desktop"></i></div><div class="app-name">v2rayN</div></div><button class="btn-add" onclick="importApp('v2rayn', 'windows')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-laptop"></i></div><div class="app-name">NekoBox / NekoRay</div></div><button class="btn-add" onclick="importApp('nekobox', 'windows')">Add</button></div>
+                    <div class="app-item"><div class="app-info"><div class="app-icon"><i class="fas fa-globe"></i></div><div class="app-name">Hiddify Next</div></div><button class="btn-add" onclick="importApp('hiddify', 'windows')">Add</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PRICING / PLAN PAGE -->
+        <div id="page-pricing" class="page-view">
+            <button class="btn-back-home" onclick="switchPage('home')"><i class="fas fa-arrow-left"></i> Home သို့ပြန်သွားမည်</button>
+            <div class="card-box">
+                <div class="section-title"><i class="fas fa-server" style="color: #60a5fa;"></i> Select Available Server Nodes</div>
+                <div class="server-filter-grid">
+                    <div class="server-btn active" onclick="selectServer('Singapore', this)">🇸🇬 Singapore Server</div>
+                    <div class="server-btn" onclick="selectServer('Japan', this)">🇯🇵 Japanese Server</div>
+                    <div class="server-btn" onclick="selectServer('United States', this)">🇺🇸 United States Server</div>
+                </div>
+
+                <div class="section-title"><i class="fas fa-gem" style="color: #60a5fa;"></i> Available Plans & Pricing (<span id="current-server-label">Singapore</span>)</div>
+                <div id="pricing-container" class="package-grid"></div>
+            </div>
+        </div>
+
+        <!-- 3. FREE KEYS PAGE -->
+        <div id="page-free" class="page-view">
+            <button class="btn-back-home" onclick="switchPage('home')"><i class="fas fa-arrow-left"></i> Home သို့ပြန်သွားမည်</button>
+            <div id="free-container"></div>
+        </div>
+
+    </div>
+
+    <!-- DYNAMIC PURCHASE MODAL -->
+    <div id="purchase-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-pkg-title">Package ဝယ်ယူရန်</div>
+                <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
             
-            <div class="card-box">
-                <div class="card-box-title"><i class="fas fa-plus-circle"></i> Key အသစ်ထည့်ရန် / ပြင်ဆင်ရန်</div>
-                <input type="hidden" id="edit-free-id">
-
-                <div class="form-grid">
-                    <div class="input-group"><label>Group Name</label><div class="input-wrapper"><i class="fas fa-layer-group left-icon"></i><input type="text" id="free-name" placeholder="HCM Free VIP"></div></div>
-                    <div class="input-group"><label>GB Limit</label><div class="input-wrapper"><i class="fas fa-hdd left-icon"></i><input type="text" id="free-gb" placeholder="Unlimited သို့မဟုတ် 100 GB"></div></div>
-                    <div class="input-group"><label>Days Left</label><div class="input-wrapper"><i class="fas fa-hourglass-half left-icon"></i><input type="text" id="free-days" placeholder="24"></div></div>
-                    <div class="input-group"><label>Expiry Date</label><div class="input-wrapper"><i class="fas fa-calendar-alt left-icon"></i><input type="text" id="free-expiry" placeholder="10/22/2026"></div></div>
-                </div>
-
-                <div class="input-group"><label>3X-UI Subscription Link</label><div class="input-wrapper"><i class="fas fa-link left-icon"></i><input type="url" id="free-link" placeholder="https://your-domain.com/sub/..."></div></div>
-
-                <div class="card-box-title" style="margin-top: 15px;"><i class="fas fa-key"></i> Server Keys ထည့်ရန်</div>
-                <div id="dynamic-keys-container"></div>
-
-                <button class="btn-action btn-secondary" style="margin-bottom: 15px;" onclick="addKeyRow()"><i class="fas fa-plus"></i> + Server Key ကွက်ထပ်ထည့်မည်</button><br>
-                <button id="btn-save-free" class="btn-action btn-green" onclick="confirmAction('Free Key အချက်အလက်များကို သိမ်းဆည်းရန် သေချာပါသလား?', saveFreeKeyAction)"><i class="fas fa-save"></i> သိမ်းဆည်းမည်</button>
+            <div style="font-size: 13px; color: var(--text-sub); margin-bottom: 12px;">
+                📍 ရွေးချယ်ထားသော Server: <b id="modal-server" style="color: #fff;">Singapore</b>
             </div>
 
-            <div class="card-box">
-                <div class="card-box-title"><i class="fas fa-list"></i> လက်ရှိ Free Keys များ</div>
-                <div id="free-list-admin" class="item-list"></div>
-            </div>
-        </div>
-
-        <!-- 2. VPN PLAN TAB -->
-        <div id="tab-pricing" class="tab-section">
-            <div class="header-title"><i class="fas fa-gem" style="color: #60a5fa;"></i> VPN Plan ဈေးနှုန်းများ စီမံရန်</div>
-
-            <div class="card-box">
-                <div class="card-box-title"><i class="fas fa-tags"></i> Plan အသစ်ထည့်ရန် / ပြင်ဆင်ရန်</div>
-                <input type="hidden" id="edit-pricing-id">
-
-                <div class="form-grid">
-                    <div class="input-group">
-                        <label>Category</label>
-                        <div class="input-wrapper"><i class="fas fa-folder left-icon"></i>
-                            <select id="pkg-category">
-                                <option value="Unlimited Packages">💎 Unlimited Plan</option>
-                                <option value="No Expire Packages">📦 No Expire Plan</option>
-                                <option value="30 Days Packages">⏳ 30 Days Plan</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="input-group"><label>Data Plan / Title</label><div class="input-wrapper"><i class="fas fa-file-alt left-icon"></i><input type="text" id="pkg-title" placeholder="100 GB, 30 Days Unl"></div></div>
-                    <div class="input-group"><label>Validity</label><div class="input-wrapper"><i class="fas fa-clock left-icon"></i><input type="text" id="pkg-validity" placeholder="30 Days / No Expire"></div></div>
-                    <div class="input-group"><label>မူရင်းဈေးနှုန်း (MMK)</label><div class="input-wrapper"><i class="fas fa-money-bill-wave left-icon"></i><input type="number" id="pkg-price-val" placeholder="7000"></div></div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="input-group">
-                        <label>Badge (Optional)</label>
-                        <div class="input-wrapper"><i class="fas fa-ribbon left-icon"></i>
-                            <select id="pkg-badge">
-                                <option value="">None (ဘာမှမပြပါ)</option>
-                                <option value="🔥 POPULAR">🔥 POPULAR</option>
-                                <option value="💎 UNLIMITED">💎 UNLIMITED</option>
-                                <option value="⚡ BEST VALUE">⚡ BEST VALUE</option>
-                                <option value="✨ RECOMMENDED">✨ RECOMMENDED</option>
-                                <option value="🏷️ DISCOUNT">🏷️ DISCOUNT</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>Promotion လျော့ဈေး ရာခိုင်နှုန်း (%)</label>
-                        <div class="input-wrapper"><i class="fas fa-percent left-icon"></i><input type="number" id="pkg-discount" placeholder="ဥပမာ- 20" min="0" max="100"></div>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>Plans ဌာနခွဲရွေးချယ်ရန် (Database Tag)</label>
-                    <div class="input-wrapper"><i class="fas fa-database left-icon"></i>
-                        <select id="pkg-db-tag">
-                            <option value="packages">Packages (Default)</option>
-                            <option value="vip_packages">VIP Packages (VIP DB)</option>
-                            <option value="promo_packages">Promotion Packages (Promo DB)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button id="btn-save-pkg" class="btn-action btn-green" onclick="confirmAction('VPN Plan အချက်အလက်ကို သိမ်းဆည်းရန် သေချာပါသလား?', savePricingPackageAction)"><i class="fas fa-save"></i> Plan သိမ်းဆည်းမည်</button>
+            <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px;">အရေအတွက် ရွေးချယ်ပါ (1 မှ 5)</div>
+            <div class="qty-btns" id="qty-container">
+                <button class="qty-btn active" onclick="setQty(1)">1</button>
+                <button class="qty-btn" onclick="setQty(2)">2</button>
+                <button class="qty-btn" onclick="setQty(3)">3</button>
+                <button class="qty-btn" onclick="setQty(4)">4</button>
+                <button class="qty-btn" onclick="setQty(5)">5</button>
             </div>
 
-            <div class="card-box">
-                <div class="card-box-title"><i class="fas fa-boxes"></i> လက်ရှိ Plans များနှင့် စာရင်းများ</div>
-                <div id="pricing-list-admin" class="item-list"></div>
-            </div>
-        </div>
-
-        <!-- 3. PAYMENTS & BRANDING TAB -->
-        <div id="tab-payments" class="tab-section">
-            <div class="header-title"><i class="fas fa-wallet" style="color: #34d399;"></i> Payment Accounts & Branding စီမံရန်</div>
-            
-            <div class="card-box">
-                <div class="card-box-title"><i class="fas fa-image"></i> HCM Branding / Website Logo</div>
-                <div class="input-group" style="margin-bottom: 0;">
-                    <label>Main Website Logo Image URL (မထည့်ပါက Shield Icon အဖြစ် Auto ပြသမည်)</label>
-                    <div class="input-wrapper"><i class="fas fa-link left-icon"></i><input type="url" id="brand-logo-url" placeholder="https://i.imgur.com/your-logo.png" onchange="confirmAction('Website Logo ကို သိမ်းဆည်းရန် သေချာပါသလား?', saveBrandLogo)"></div>
-                </div>
+            <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: var(--text-sub);">စုစုပေါင်းကျသင့်ငွေ:</span>
+                <span id="modal-total-price" style="font-size: 18px; font-weight: 800; color: var(--accent-green);">0 MMK</span>
             </div>
 
-            <div class="card-box">
-                <div class="card-box-title"><i class="fas fa-wallet"></i> Payment အကောင့်များ သတ်မှတ်ရန်</div>
-                <div class="payment-methods-grid">
-                    <div class="payment-method-card">
-                        <div class="payment-method-info"><span>Select Method</span><h4>KBZ Mobile Payment</h4></div>
-                        <div class="btn-add-payment" onclick="openPaymentModal('KBZ Mobile Payment')"><i class="fas fa-plus"></i></div>
-                    </div>
-                    <div class="payment-method-card">
-                        <div class="payment-method-info"><span>Select Method</span><h4>Wave Mobile Payment</h4></div>
-                        <div class="btn-add-payment" onclick="openPaymentModal('Wave Mobile Payment')"><i class="fas fa-plus"></i></div>
-                    </div>
-                    <div class="payment-method-card">
-                        <div class="payment-method-info"><span>Select Method</span><h4>AYA Mobile Payment</h4></div>
-                        <div class="btn-add-payment" onclick="openPaymentModal('AYA Mobile Payment')"><i class="fas fa-plus"></i></div>
-                    </div>
-                </div>
-
-                <div class="card-box-title" style="margin-top: 25px;"><i class="fas fa-list"></i> သိမ်းဆည်းထားသော Payment စာရင်းများ</div>
-                <div id="payment-list-admin" class="item-list"><p style="color:var(--text-sub); font-size:12px;">သိမ်းဆည်းထားသော Payment အကောင့်များ မရှိသေးပါ။</p></div>
+            <div style="font-size: 13px; font-weight: bold; margin-bottom: 6px;">ငွေပေးချေမှု နည်းလမ်း ရွေးချယ်ပါ</div>
+            <div class="payment-grid">
+                <button class="pay-btn active" onclick="setPayment('KBZ Pay', this)">KBZ Pay</button>
+                <button class="pay-btn" onclick="setPayment('Wave Pay', this)">Wave Pay</button>
+                <button class="pay-btn" onclick="setPayment('AYA Pay', this)">AYA Pay</button>
             </div>
-        </div>
 
-        <!-- 4. NODES CONFIG TAB -->
-        <div id="tab-nodes" class="tab-section">
-            <div class="header-title"><i class="fas fa-server" style="color: #34d399;"></i> Nodes (3X-UI Config)</div>
-            <div class="card-box">
-                <div class="card-box-title"><i class="fas fa-cog"></i> 3X-UI Panel API Settings</div>
-                <div class="form-grid">
-                    <div class="input-group"><label>Node / Server Name</label><div class="input-wrapper"><i class="fas fa-server left-icon"></i><input type="text" id="node-name" placeholder="SG Main Server 01"></div></div>
-                    <div class="input-group"><label>3X-UI Base URL</label><div class="input-wrapper"><i class="fas fa-globe left-icon"></i><input type="text" id="node-url" placeholder="https://soi.hcmapis.tech:2053"></div></div>
-                </div>
-                <button class="btn-action btn-green" onclick="confirmAction('Node Config ကို သိမ်းဆည်းရန် သေချာပါသလား?', saveNodeConfigAction)"><i class="fas fa-save"></i> Node Config သိမ်းဆည်းမည်</button>
+            <!-- PAYMENT ACCOUNT DETAILS LOADED FROM FIREBASE ADMIN PANEL -->
+            <div id="payment-details-box" style="background: rgba(0,0,0,0.3); border: 1px dashed var(--border-color); border-radius: 10px; padding: 12px; margin: 12px 0; font-size: 12px;">
+                <div style="color: var(--accent-gold); font-weight: bold; margin-bottom: 4px;" id="pay-acc-name">KBZ Pay Account</div>
+                <div style="font-family: monospace; font-size: 14px; color: #fff;" id="pay-acc-number">Loading...</div>
+                <div style="color: var(--text-sub); font-size: 11px;" id="pay-acc-holder">အမည်: Loading...</div>
+            </div>
+
+            <button class="action-btn" style="background: var(--accent-blue); color: #fff;" onclick="proceedCheckout()"><i class="fab fa-telegram-plane"></i> Admin သို့ အော်ဒါတင်မည်</button>
+            <button class="action-btn" style="background: var(--card-bg); color: var(--accent-gold); border: 1px solid var(--border-color);" onclick="requestKeyFirst()"><i class="fas fa-key"></i> ငွေမလွှဲဘဲ Key အရင်တောင်းမည်</button>
+
+            <!-- WARRANTY INFO -->
+            <div class="warranty-box">
+                <div style="font-weight: bold; color: #fff; margin-bottom: 4px;">🛡️ ဝန်ဆောင်မှု အာမခံချက်များ</div>
+                <div>✅ IP Speed လျော့ခံရခြင်းမျိုး မရှိစေရပါ။</div>
+                <div>✅ Key IP Ban ခံရခြင်းမျိုး လုံးဝမဖြစ်စေရပါ။</div>
+                <div style="margin-top: 4px; border-top: 1px solid var(--border-color); padding-top: 4px;">⚙️ သက်တမ်း (သို့) GB မကုန်ဆုံးခင်အထိ Error တစ်ခုခုဖြစ်ပါက Key အသစ်ဖြင့် လဲလှယ်ပေးပါသည်။</div>
             </div>
         </div>
     </div>
-</div>
+
+    <footer>
+        <p>© 2026 HCM VPN Service. All Rights Reserved.</p>
+        <p style="margin-top: 4px; font-size: 11px;">Powered by HCM Team</p>
+    </footer>
 
 <script>
     const firebaseConfig = {
@@ -521,380 +529,284 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.database();
 
-    // CUSTOM CONFIRMATION MODAL LOGIC
-    let pendingActionCallback = null;
-    function confirmAction(message, callback) {
-        document.getElementById('confirm-desc').innerText = message;
-        document.getElementById('custom-confirm-modal').style.display = 'flex';
-        pendingActionCallback = callback;
-    }
+    let activeSubLink = "";
+    let selectedServerLocation = "Singapore";
+    let allPlansCache = {
+        packages: {},
+        vip_packages: {},
+        promo_packages: {}
+    };
+    let paymentAccountsCache = {};
 
-    function closeConfirmModal(isYes) {
-        document.getElementById('custom-confirm-modal').style.display = 'none';
-        if (isYes && pendingActionCallback) {
-            pendingActionCallback();
+    let currentSelectedPkg = null;
+    let selectedQty = 1;
+    let selectedPaymentMethod = "KBZ Pay";
+
+    function switchPage(page) {
+        document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+
+        if (page === 'free') {
+            document.getElementById('page-free').classList.add('active');
+            document.getElementById('nav-btn-free').classList.add('active');
+        } else if (page === 'pricing') {
+            document.getElementById('page-pricing').classList.add('active');
+            document.getElementById('nav-btn-pricing').classList.add('active');
+        } else {
+            document.getElementById('page-home').classList.add('active');
+            document.getElementById('nav-btn-home').classList.add('active');
         }
-        pendingActionCallback = null;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // PAYMENT MODAL LOGIC
-    function openPaymentModal(methodName) {
-        document.getElementById('payment-modal-title').innerText = methodName;
-        document.getElementById('modal-payment-type').value = methodName;
-        document.getElementById('pay-acc-name').value = '';
-        document.getElementById('pay-acc-num').value = '';
-        document.getElementById('payment-modal').style.display = 'flex';
+    function selectServer(loc, el) {
+        document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        selectedServerLocation = loc;
+        document.getElementById('current-server-label').innerText = loc;
+        renderPricing();
     }
 
-    function closePaymentModal() {
-        document.getElementById('payment-modal').style.display = 'none';
+    function switchOs(os, el) {
+        document.querySelectorAll('.os-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.app-list').forEach(l => l.style.display = 'none');
+        el.classList.add('active');
+        document.getElementById('os-' + os).style.display = 'grid';
     }
 
-    function submitPaymentData() {
-        const type = document.getElementById('modal-payment-type').value;
-        const name = document.getElementById('pay-acc-name').value;
-        const phone = document.getElementById('pay-acc-num').value;
-
-        if (!name || !phone) {
-            showToast("အကောင့်အမည်နှင့် ဖုန်းနံပါတ် အပြည့်အစုံ ဖြည့်ပေးပါ။", "danger");
+    function importApp(appName, os) {
+        if (!activeSubLink) {
+            alert('လက်ရှိ Free Subscription Link မရှိသေးပါသဖြင့် Direct Add ပြုလုပ်၍ မရသေးပါခင်ဗျာ။');
             return;
         }
 
-        confirmAction(`ဤ ${type} အကောင့်ကို သိမ်းဆည်းရန် သေချာပါသလား?`, () => {
-            showToast("သိမ်းဆည်းနေပါသည်...", "loading");
-            db.ref('payments/accounts').push({ type, name, phone }).then(() => {
-                showToast("Payment အကောင့် အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။");
-                closePaymentModal();
-                loadAdminPayments();
-            });
-        });
-    }
+        const encodedUrl = encodeURIComponent(activeSubLink);
 
-    function loadAdminPayments() {
-        db.ref('payments/accounts').on('value', snapshot => {
-            const list = document.getElementById('payment-list-admin');
-            list.innerHTML = '';
-            const data = snapshot.val();
-            if (!data) {
-                list.innerHTML = '<p style="color:var(--text-sub); font-size:12px;">သိမ်းဆည်းထားသော Payment အကောင့်များ မရှိသေးပါ။</p>';
-                return;
-            }
-
-            Object.keys(data).forEach(id => {
-                const item = data[id];
-                list.innerHTML += `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <h4>${item.type} (${item.name})</h4>
-                            <p>Phone / Acc: ${item.phone}</p>
-                        </div>
-                        <div class="item-btns">
-                            <button class="btn-action btn-danger" style="padding:6px 12px; font-size:12px;" onclick="confirmAction('ဤ Payment အကောင့်ကို ဖျက်ရန် သေချာပါသလား?', () => deletePayment('${id}'))">ဖျက်မည်</button>
-                        </div>
-                    </div>
-                `;
-            });
-        });
-    }
-
-    function deletePayment(id) {
-        showToast("ဖျက်ဆီးနေပါသည်...", "loading");
-        db.ref('payments/accounts/' + id).remove().then(() => {
-            showToast("Payment အကောင့်ကို ဖျက်ပြီးပါပြီ။", "danger");
-        });
-    }
-
-    function togglePass() {
-        const p = document.getElementById('login-pass');
-        p.type = p.type === 'password' ? 'text' : 'password';
-    }
-
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
-
-    function showToast(message, type = 'success') {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = `toast-bubble ${type}`;
-        
-        let icon = 'fa-check-circle';
-        if (type === 'danger') icon = 'fa-exclamation-circle';
-        if (type === 'loading') icon = 'fa-spinner fa-spin';
-
-        toast.innerHTML = `<i class="fas ${icon}" style="font-size:16px; color: ${type === 'success' ? 'var(--accent-green)' : type === 'danger' ? 'var(--accent-red)' : 'var(--accent-blue)'};"></i> <span>${message}</span>`;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.style.animation = 'toastOut 0.3s forwards';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('dash-screen').style.display = 'flex';
-            loadAdminFreeKeys();
-            loadAdminPricing();
-            loadBrandLogo();
-            loadAdminPayments();
+        if (os === 'android') {
+            if (appName === 'v2rayng') window.location.href = `v2rayng://install-sub?url=${encodedUrl}`;
+            else if (appName === 'v2box') window.location.href = `v2box://install-sub?url=${encodedUrl}`;
+            else window.location.href = `https://play.google.com/store/search?q=${appName}&c=apps`;
+        } else if (os === 'ios') {
+            if (appName === 'shadowrocket') window.location.href = `sub://${btoa(activeSubLink)}`;
+            else if (appName === 'streisand') window.location.href = `streisand://import/${activeSubLink}`;
+            else window.location.href = `https://apps.apple.com/us/search?term=${appName}`;
         } else {
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('dash-screen').style.display = 'none';
+            navigator.clipboard.writeText(activeSubLink).then(() => {
+                alert('Windows App အတွက် Subscription Link ကို Copy ကူးလိုက်ပါပြီ! App ထဲတွင် Paste လုပ်ပေးပါ။');
+            });
         }
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => alert('Copy ကူးပြီးပါပြီ!'));
+    }
+
+    function openModal(title, basePrice) {
+        currentSelectedPkg = { title, basePrice };
+        selectedQty = 1;
+        selectedPaymentMethod = "KBZ Pay";
+
+        document.querySelectorAll('.qty-btn').forEach((btn, idx) => {
+            if (idx === 0) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+
+        document.querySelectorAll('.pay-btn').forEach((btn, idx) => {
+            if (idx === 0) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+
+        document.getElementById('modal-pkg-title').innerText = title;
+        document.getElementById('modal-server').innerText = selectedServerLocation;
+        
+        updateModalTotal();
+        updatePaymentDisplay();
+
+        document.getElementById('purchase-modal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('purchase-modal').classList.remove('active');
+    }
+
+    function setQty(qty) {
+        selectedQty = qty;
+        document.querySelectorAll('.qty-btn').forEach((btn, idx) => {
+            if (idx + 1 === qty) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        updateModalTotal();
+    }
+
+    function updateModalTotal() {
+        if (!currentSelectedPkg) return;
+        const total = currentSelectedPkg.basePrice * selectedQty;
+        document.getElementById('modal-total-price').innerText = total.toLocaleString() + " MMK";
+    }
+
+    function setPayment(method, el) {
+        selectedPaymentMethod = method;
+        document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        updatePaymentDisplay();
+    }
+
+    function updatePaymentDisplay() {
+        document.getElementById('pay-acc-name').innerText = selectedPaymentMethod + " Account";
+        
+        if (paymentAccountsCache && paymentAccountsCache[selectedPaymentMethod]) {
+            const acc = paymentAccountsCache[selectedPaymentMethod];
+            document.getElementById('pay-acc-number').innerText = acc.number || 'Admin ထံတွင် မထည့်ရသေးပါ။';
+            document.getElementById('pay-acc-holder').innerText = 'အမည်: ' + (acc.holder || '-');
+        } else {
+            document.getElementById('pay-acc-number').innerText = '09XXXXXXXXX';
+            document.getElementById('pay-acc-holder').innerText = 'အမည်: Admin (Configure in DB)';
+        }
+    }
+
+    function proceedCheckout() {
+        if (!currentSelectedPkg) return;
+        const total = currentSelectedPkg.basePrice * selectedQty;
+        const msg = `Hello Admin, ${selectedServerLocation} Server မှ ${currentSelectedPkg.title} ကို အရေအတွက် (${selectedQty}) ခု ဝယ်ယူလိုပါသည် ကျသင့်ငွေ ${total.toLocaleString()} MMK ကို ${selectedPaymentMethod} ဖြင့် ငွေလွှဲထားပါသည်။`;
+        window.open(`https://t.me/akuma_edu?text=${encodeURIComponent(msg)}`, '_blank');
+        closeModal();
+    }
+
+    function requestKeyFirst() {
+        if (!currentSelectedPkg) return;
+        const msg = `Hello Admin, ${selectedServerLocation} Server မှ ${currentSelectedPkg.title} အရေအတွက် (${selectedQty}) ခု ကို ငွေမလွှဲဘဲ Key အရင်တောင်းဆိုလိုပါသည်ခင်ဗျာ။`;
+        window.open(`https://t.me/akuma_edu?text=${encodeURIComponent(msg)}`, '_blank');
+        closeModal();
+    }
+
+    function renderPricing() {
+        const container = document.getElementById('pricing-container');
+        container.innerHTML = '';
+        
+        let hasData = false;
+        const dbTags = ['packages', 'vip_packages', 'promo_packages'];
+
+        dbTags.forEach(tag => {
+            const plansObj = allPlansCache[tag];
+            if (plansObj) {
+                Object.keys(plansObj).forEach(id => {
+                    hasData = true;
+                    const p = plansObj[id];
+                    
+                    let displayPriceHtml = '';
+                    let rawPrice = p.priceValue || 0;
+                    let discountPercent = parseInt(p.discount || 0);
+
+                    if (tag === 'promo_packages' && discountPercent > 0) {
+                        let discountedPrice = Math.round(rawPrice * (100 - discountPercent) / 100);
+                        displayPriceHtml = `
+                            <span class="pkg-price-old">${rawPrice.toLocaleString()} MMK</span>
+                            <span class="pkg-price">${discountedPrice.toLocaleString()} MMK</span>
+                            <span style="font-size:10px; color:#ef4444; margin-left:6px; font-weight:bold;">(-${discountPercent}%)</span>
+                        `;
+                    } else {
+                        displayPriceHtml = `<span class="pkg-price">${rawPrice.toLocaleString()} MMK</span>`;
+                    }
+
+                    const safeTitle = (p.title || 'Package').replace(/'/g, "\\'");
+                    container.innerHTML += `
+                        <div class="pkg-card" onclick="openModal('${safeTitle}', ${rawPrice})">
+                            ${p.badge ? `<span class="pkg-badge">${p.badge}</span>` : ''}
+                            <div class="pkg-title">${p.title} (${p.validity || 'Unlimited'})</div>
+                            <div style="margin: 6px 0;">${displayPriceHtml}</div>
+                            <p style="font-size:11px; color:#9ca3af;">Server: <b>${selectedServerLocation}</b> | ဝယ်ယူရန် နှိပ်ပါ။</p>
+                        </div>
+                    `;
+                });
+            }
+        });
+
+        if (!hasData) {
+            container.innerHTML = '<div style="color:#9ca3af; text-align:center; grid-column: 1/-1;">ယခုလက်ရှိ Plan များ မရှိသေးပါ။</div>';
+        }
+    }
+
+    db.ref('packages').on('value', snapshot => {
+        allPlansCache.packages = snapshot.val() || {};
+        renderPricing();
     });
 
-    function handleLogin(e) {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
-        showToast("လော့ဂ်အင် ဝင်နေပါသည်...", "loading");
-        auth.signInWithEmailAndPassword(email, pass)
-            .then(() => showToast("လော့ဂ်အင် အောင်မြင်ပါသည်"))
-            .catch(err => showToast(err.message, "danger"));
-    }
+    db.ref('vip_packages').on('value', snapshot => {
+        allPlansCache.vip_packages = snapshot.val() || {};
+        renderPricing();
+    });
 
-    function handleLogout() {
-        confirmAction("အကောင့်မှ ထွက်ခွာရန် သေချာပါသလား?", () => {
-            auth.signOut();
-            showToast("အကောင့်မှ ထွက်ခွာခဲ့ပါပြီ");
-        });
-    }
+    db.ref('promo_packages').on('value', snapshot => {
+        allPlansCache.promo_packages = snapshot.val() || {};
+        renderPricing();
+    });
 
-    function switchTab(tab, el) {
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('tab-' + tab).classList.add('active');
-    }
+    db.ref('payment_accounts').on('value', snapshot => {
+        paymentAccountsCache = snapshot.val() || {};
+        updatePaymentDisplay();
+    });
 
-    function saveBrandLogo() {
-        const logoUrl = document.getElementById('brand-logo-url').value;
-        showToast("သိမ်းဆည်းနေပါသည်...", "loading");
-        db.ref('payments/brandLogo').set(logoUrl).then(() => {
-            showToast("Website Logo သိမ်းဆည်းပြီးပါပြီ။");
-        });
-    }
+    db.ref('free_keys').on('value', snapshot => {
+        const container = document.getElementById('free-container');
+        container.innerHTML = '';
+        const data = snapshot.val();
+        if (!data) return container.innerHTML = '<div class="card-box" style="color:#9ca3af; text-align:center;">Free Keys အချက်အလက်များ မရှိသေးပါ။</div>';
 
-    function loadBrandLogo() {
-        db.ref('payments/brandLogo').on('value', snapshot => {
-            const url = snapshot.val();
-            if (url) document.getElementById('brand-logo-url').value = url;
-        });
-    }
+        Object.keys(data).forEach(id => {
+            const f = data[id];
+            if (f.link) activeSubLink = f.link;
 
-    function addKeyRow(name = '', val = '') {
-        const container = document.getElementById('dynamic-keys-container');
-        const count = container.children.length + 1;
-        const div = document.createElement('div');
-        div.className = 'dynamic-key-row';
-        div.innerHTML = `
-            <button class="btn-action btn-danger" style="position:absolute; top:8px; right:8px; padding:4px 8px; font-size:11px;" onclick="confirmAction('ဤ Server Key ကွက်ကို ဖျက်ရန် သေချာပါသလား?', () => this.parentElement.remove())">ဖျက်မည်</button>
-            <div class="input-group" style="margin-bottom:8px;"><label>Server Name</label><div class="input-wrapper"><i class="fas fa-server left-icon"></i><input type="text" class="key-row-name" value="${name}" placeholder="Free Server 0${count}"></div></div>
-            <div class="input-group" style="margin-bottom:0;"><label>Server Key</label><div class="input-wrapper"><i class="fas fa-key left-icon"></i><textarea class="key-row-val" rows="2" placeholder="vless://...">${val}</textarea></div></div>
-        `;
-        container.appendChild(div);
-    }
+            const isActive = f.status && f.status.toLowerCase() === 'active';
+            const statusClass = isActive ? 'status-badge-active' : 'status-badge-inactive';
+            const statusText = f.status || 'Active';
 
-    function saveFreeKeyAction() {
-        const editId = document.getElementById('edit-free-id').value;
-        const name = document.getElementById('free-name').value;
-        const link = document.getElementById('free-link').value;
+            let keysHtml = '';
+            if (f.keys && Array.isArray(f.keys)) {
+                f.keys.forEach(k => {
+                    keysHtml += `
+                        <div class="server-key-box-item">
+                            <div class="server-key-title"><i class="fas fa-key"></i> ${k.name || 'Server Key'}</div>
+                            <div class="key-copy-row">
+                                <span style="word-break: break-all;">${k.value || ''}</span>
+                                <button class="btn-copy-key" onclick="copyText('${k.value}')">Copy Key</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
 
-        if (!name || !link) {
-            showToast("Group Name နှင့် Subscription Link ထည့်ပေးပါ။", "danger");
-            return;
-        }
-
-        showToast("သိမ်းဆည်းနေပါသည်...", "loading");
-        const gb = document.getElementById('free-gb').value || 'Unlimited';
-        const daysLeft = document.getElementById('free-days').value || '30';
-        const expiry = document.getElementById('free-expiry').value || '10/22/2026';
-
-        const keysList = [];
-        document.querySelectorAll('.dynamic-key-row').forEach((row, idx) => {
-            const kname = row.querySelector('.key-row-name').value || `Free Server 0${idx + 1}`;
-            const kval = row.querySelector('.key-row-val').value;
-            if (kval) keysList.push({ name: kname, value: kval });
-        });
-
-        const keyData = { name, gb, daysLeft, expiry, link, keys: keysList };
-        const promise = editId ? db.ref('free_keys/' + editId).update(keyData) : db.ref('free_keys').push(keyData);
-        promise.then(() => {
-            showToast("Free Key အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။");
-            resetFreeForm();
-        });
-    }
-
-    function resetFreeForm() {
-        document.getElementById('edit-free-id').value = '';
-        document.getElementById('free-name').value = '';
-        document.getElementById('free-gb').value = '';
-        document.getElementById('free-days').value = '';
-        document.getElementById('free-expiry').value = '';
-        document.getElementById('free-link').value = '';
-        document.getElementById('dynamic-keys-container').innerHTML = '';
-    }
-
-    function loadAdminFreeKeys() {
-        db.ref('free_keys').on('value', snapshot => {
-            const list = document.getElementById('free-list-admin');
-            list.innerHTML = '';
-            const data = snapshot.val();
-            if (!data) return list.innerHTML = '<p style="color:#9ca3af; font-size:12px;">Free Keys မရှိသေးပါ။</p>';
-
-            Object.keys(data).forEach(id => {
-                const item = data[id];
-                list.innerHTML += `
-                    <div class="list-item">
-                        <div class="item-info"><h4>${item.name}</h4><p>Data: ${item.gb} | Keys: ${item.keys ? item.keys.length : 0}</p></div>
-                        <div class="item-btns">
-                            <button class="btn-action btn-secondary" style="padding:6px 12px; font-size:12px;" onclick="editFreeKey('${id}')">ပြင်မည်</button>
-                            <button class="btn-action btn-danger" style="padding:6px 12px; font-size:12px;" onclick="confirmAction('ဤ Free Key များကို ဖျက်ရန် သေချာပါသလား?', () => deleteFreeKey('${id}'))">ဖျက်မည်</button>
+            container.innerHTML += `
+                <div class="free-key-panel">
+                    <div class="free-key-header"><i class="fas fa-globe" style="color: #38bdf8;"></i> ${f.name || 'Owenn'}</div>
+                    
+                    <div class="usage-overview-box">
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">Days left</div>
+                                <div class="metric-val">${f.daysLeft || '30'}</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Expiry</div>
+                                <div class="metric-val">${f.expiry || '-'}</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Status</div>
+                                <div class="metric-val"><span class="${statusClass}">${statusText}</span></div>
+                            </div>
                         </div>
                     </div>
-                `;
-            });
+
+                    <div class="dashboard-actions-grid">
+                        <button class="btn-sub-dash" onclick="window.open('${f.link || '#'}', '_blank')">3X-UI Sub Dashboard</button>
+                    </div>
+
+                    ${keysHtml}
+                </div>
+            `;
         });
-    }
-
-    function editFreeKey(id) {
-        db.ref('free_keys/' + id).once('value', snapshot => {
-            const data = snapshot.val();
-            if (!data) return;
-            document.getElementById('edit-free-id').value = id;
-            document.getElementById('free-name').value = data.name || '';
-            document.getElementById('free-gb').value = data.gb || '';
-            document.getElementById('free-days').value = data.daysLeft || '';
-            document.getElementById('free-expiry').value = data.expiry || '';
-            document.getElementById('free-link').value = data.link || '';
-            const container = document.getElementById('dynamic-keys-container');
-            container.innerHTML = '';
-            if (data.keys) data.keys.forEach(k => addKeyRow(k.name, k.value));
-        });
-    }
-
-    function deleteFreeKey(id) {
-        showToast("ဖျက်ဆီးနေပါသည်...", "loading");
-        db.ref('free_keys/' + id).remove().then(() => showToast("ဖျက်ပြီးပါပြီ", "danger"));
-    }
-
-    function savePricingPackageAction() {
-        const editId = document.getElementById('edit-pricing-id').value;
-        const category = document.getElementById('pkg-category').value;
-        const title = document.getElementById('pkg-title').value;
-        const validity = document.getElementById('pkg-validity').value;
-        const priceVal = parseInt(document.getElementById('pkg-price-val').value) || 0;
-        const badge = document.getElementById('pkg-badge').value;
-        const discount = parseInt(document.getElementById('pkg-discount').value) || 0;
-        const dbTag = document.getElementById('pkg-db-tag').value;
-
-        if (!title || !validity || !priceVal) {
-            showToast("Plan အချက်အလက်များ အပြည့်အစုံ ဖြည့်စွက်ပါ။", "danger");
-            return;
-        }
-
-        showToast("သိမ်းဆည်းနေပါသည်...", "loading");
-        const pkgData = { 
-            category, 
-            title, 
-            validity, 
-            priceValue: priceVal, 
-            priceText: `${priceVal.toLocaleString()} MMK`, 
-            badge, 
-            discount 
-        };
-
-        const promise = editId ? db.ref(dbTag + '/' + editId).update(pkgData) : db.ref(dbTag).push(pkgData);
-        promise.then(() => {
-            showToast("Plan အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။");
-            resetPricingForm();
-        });
-    }
-
-    function resetPricingForm() {
-        document.getElementById('edit-pricing-id').value = '';
-        document.getElementById('pkg-title').value = '';
-        document.getElementById('pkg-validity').value = '';
-        document.getElementById('pkg-price-val').value = '';
-        document.getElementById('pkg-badge').value = '';
-        document.getElementById('pkg-discount').value = '';
-    }
-
-    function loadAdminPricing() {
-        const dbTags = ['packages', 'vip_packages', 'promo_packages'];
-        dbTags.forEach(tag => {
-            db.ref(tag).on('value', snapshot => {
-                renderAdminPricingList();
-            });
-        });
-    }
-
-    function renderAdminPricingList() {
-        const list = document.getElementById('pricing-list-admin');
-        list.innerHTML = '';
-        const dbTags = ['packages', 'vip_packages', 'promo_packages'];
-
-        dbTags.forEach(tag => {
-            db.ref(tag).once('value', snapshot => {
-                const data = snapshot.val();
-                if (data) {
-                    Object.keys(data).forEach(id => {
-                        const p = data[id];
-                        list.innerHTML += `
-                            <div class="list-item">
-                                <div class="item-info">
-                                    <h4>${p.title} (${p.validity})</h4>
-                                    <p>Tag: <b>${tag}</b> | Price: ${p.priceValue.toLocaleString()} MMK ${p.discount ? `(Promo: ${p.discount}%)` : ''}</p>
-                                </div>
-                                <div class="item-btns">
-                                    <button class="btn-action btn-secondary" style="padding:6px 12px; font-size:12px;" onclick="editPricingPackage('${id}', '${tag}')">ပြင်မည်</button>
-                                    <button class="btn-action btn-danger" style="padding:6px 12px; font-size:12px;" onclick="confirmAction('ဤ VPN Plan ကို ဖျက်ရန် သေချာပါသလား?', () => deletePricingPackage('${id}', '${tag}'))">ဖျက်မည်</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-            });
-        });
-    }
-
-    function editPricingPackage(id, tag) {
-        db.ref(tag + '/' + id).once('value', snapshot => {
-            const p = snapshot.val();
-            if (!p) return;
-            document.getElementById('edit-pricing-id').value = id;
-            document.getElementById('pkg-category').value = p.category || '30 Days Packages';
-            document.getElementById('pkg-title').value = p.title || '';
-            document.getElementById('pkg-validity').value = p.validity || '';
-            document.getElementById('pkg-price-val').value = p.priceValue || '';
-            document.getElementById('pkg-badge').value = p.badge || '';
-            document.getElementById('pkg-discount').value = p.discount || '';
-            document.getElementById('pkg-db-tag').value = tag;
-        });
-    }
-
-    function deletePricingPackage(id, tag) {
-        showToast("ဖျက်ဆီးနေပါသည်...", "loading");
-        db.ref(tag + '/' + id).remove().then(() => {
-            showToast("Plan ကို ဖျက်ပြီးပါပြီ။", "danger");
-            renderAdminPricingList();
-        });
-    }
-
-    function saveNodeConfigAction() {
-        const name = document.getElementById('node-name').value;
-        const url = document.getElementById('node-url').value;
-        if (!name || !url) return showToast("Node အချက်အလက်ဖြည့်ပါ", "danger");
-        showToast("သိမ်းဆည်းနေပါသည်...", "loading");
-        db.ref('nodes').push({ name, url }).then(() => {
-            showToast("Node သိမ်းဆည်းပြီးပါပြီ။");
-            document.getElementById('node-name').value = '';
-            document.getElementById('node-url').value = '';
-        });
-    }
+    });
 </script>
 
 </body>
