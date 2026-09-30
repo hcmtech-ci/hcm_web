@@ -626,10 +626,15 @@
         toast.innerHTML = `<i class="fas ${icon}" style="font-size:16px; color: ${type === 'success' ? 'var(--accent-green)' : type === 'danger' ? 'var(--accent-red)' : 'var(--accent-blue)'};"></i> <span>${message}</span>`;
         container.appendChild(toast);
 
-        setTimeout(() => {
-            toast.style.animation = 'toastOut 0.3s forwards';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        if (type !== 'loading') {
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 0.3s forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        } else {
+            // Remove previous loading toasts if needed
+            setTimeout(() => { if (toast.parentNode) { toast.style.animation = 'toastOut 0.3s forwards'; setTimeout(() => toast.remove(), 300); } }, 2000);
+        }
     }
 
     auth.onAuthStateChanged(user => {
